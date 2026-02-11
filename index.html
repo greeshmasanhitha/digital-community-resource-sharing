@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>🌍 Digital Community Resource Sharing</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    text-align:center;
+    color:white;
+    background:linear-gradient(135deg,#41295a,#2F0743,#1e3c72);
+}
+
+.page{display:none;padding:50px;}
+.active{display:block;}
+
+button{
+    padding:8px 15px;
+    border:none;
+    border-radius:20px;
+    cursor:pointer;
+    margin:5px;
+    background:#8f94fb;
+}
+button:hover{background:white;color:black;}
+
+input{
+    padding:8px;
+    border-radius:10px;
+    border:none;
+    margin:5px;
+}
+
+.card{
+    background:rgba(255,255,255,0.15);
+    padding:15px;
+    border-radius:15px;
+    margin:15px auto;
+    width:280px;
+}
+
+.resources{
+    margin:30px 0;
+    font-size:40px;
+}
+
+.user-label{
+    font-weight:bold;
+    color:#ffd700;
+    margin-bottom:15px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- WELCOME PAGE -->
+<div id="home" class="page active">
+    <h1>🌍 Digital Community Resource Sharing</h1>
+    <p>🤝 Share • Borrow • Connect • Grow Together</p>
+
+    <div class="resources">
+        📚 🔧 💻 🧸 🎮 🏀 🛠️ 📱
+    </div>
+
+    <button onclick="showPage('login')">🚀 Get Started</button>
+</div>
+
+<!-- LOGIN PAGE -->
+<div id="login" class="page">
+    <h2>👤 Login</h2>
+    <input type="text" id="username" placeholder="Enter name">
+    <br>
+    <button onclick="login()">Continue</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page">
+    <h2>📊 Community Dashboard</h2>
+    <div class="user-label" id="currentUserLabel"></div>
+
+    <h3>➕ Create Resource</h3>
+    <input type="text" id="itemName" placeholder="Enter item name">
+    <button onclick="createItem()">Add</button>
+
+    <h3>📦 Available Resources</h3>
+    <div id="itemList"></div>
+
+    <button onclick="switchUser()">⚡ Quick Switch User</button>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+
+let currentUser="";
+let items=[];
+
+function showPage(id){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
+
+function login(){
+    let name=document.getElementById("username").value.trim().toLowerCase();
+    if(name==="") return alert("Enter name");
+
+    currentUser=name;
+    document.getElementById("currentUserLabel").innerText="👤 Logged in as: "+currentUser;
+    document.getElementById("username").value="";
+    showPage("dashboard");
+    displayItems();
+}
+
+function logout(){
+    currentUser="";
+    showPage("login");
+}
+
+function switchUser(){
+    let name=prompt("Enter user name:").trim().toLowerCase();
+    if(name==="") return;
+    currentUser=name;
+    document.getElementById("currentUserLabel").innerText="👤 Logged in as: "+currentUser;
+    displayItems();
+}
+
+function createItem(){
+    let name=document.getElementById("itemName").value.trim();
+    if(name==="") return alert("Enter item name");
+
+    items.push({
+        name:name,
+        owner:currentUser,
+        status:"Available",
+        borrower:"",
+        rating:""
+    });
+
+    document.getElementById("itemName").value="";
+    displayItems();
+}
+
+function displayItems(){
+    let list=document.getElementById("itemList");
+    list.innerHTML="";
+
+    items.forEach((item,index)=>{
+        let card=document.createElement("div");
+        card.className="card";
+
+        card.innerHTML=`
+            <h4>📦 ${item.name}</h4>
+            <p>👤 Owner: ${item.owner}</p>
+            <p>📌 Status: ${item.status}</p>
+            ${item.rating ? "<p>⭐ Rating: "+item.rating+"</p>" : ""}
+        `;
+
+        // Borrow
+        if(item.status==="Available" && item.owner!==currentUser){
+            card.innerHTML+=`<button onclick="borrow(${index})">🤝 Borrow</button>`;
+        }
+
+        // Approve / Reject
+        if(item.status==="Requested" && item.owner===currentUser){
+            card.innerHTML+=`
+                <button onclick="approve(${index})">✅ Approve</button>
+                <button onclick="reject(${index})">❌ Reject</button>
+            `;
+        }
+
+        // Return
+        if(item.status==="Borrowed" && item.borrower===currentUser){
+            card.innerHTML+=`<button onclick="returnItem(${index})">🔄 Return</button>`;
+        }
+
+        // Rating
+        if(item.status==="Returned" && item.owner===currentUser && item.rating===""){
+            card.innerHTML+=`<button onclick="rateItem(${index})">⭐ Give Rating</button>`;
+        }
+
+        list.appendChild(card);
+    });
+}
+
+function borrow(i){
+    items[i].status="Requested";
+    items[i].borrower=currentUser;
+    displayItems();
+}
+
+function approve(i){
+    items[i].status="Borrowed";
+    displayItems();
+}
+
+function reject(i){
+    items[i].status="Available";
+    items[i].borrower="";
+    displayItems();
+}
+
+function returnItem(i){
+    items[i].status="Returned";
+    displayItems();
+}
+
+function rateItem(i){
+    let rating=prompt("Give rating out of 5:");
+    items[i].rating=rating;
+    items[i].status="Available";
+    items[i].borrower="";
+    displayItems();
+}
+
+</script>
+
+</body>
+</html>
